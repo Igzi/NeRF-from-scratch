@@ -5,8 +5,10 @@ validation_epoch_interval: 30
 checkpoint_epoch_interval: 30
 checkpoint_path: 'checkpoints/lego_pt3d.pth'
 data:
-  dataset_name: 'lego'
-  image_size: [800, 800] # [height, width]
+  dataset_path: './nerf_synthetic/lego/'
+  train_size: 100
+  validation_size: 100
+  test_size: 200
 test:
   mode: 'evaluation'
   trajectory_type: 'circular'
