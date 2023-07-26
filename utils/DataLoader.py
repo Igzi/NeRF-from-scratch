@@ -36,11 +36,13 @@ class DataLoader():
         for i in range(1,test_size+1):
             frame = transforms['frames'][0]
             
-            torch.cat([poses, torch.tensor(frame['transform_matrix'])], axis=0) 
+            poses = torch.cat([poses, torch.tensor(frame['transform_matrix'])], axis=0) 
 
             image_path = self.dataset_path + frame['file_path'] + ".png"
             image = iio.imread(image_path)
-            torch.cat([images, torch.tensor(image)], axis=0) 
+            images = torch.cat([images, torch.tensor(image)], axis=0) 
+
+        return images, poses
 
 
 
