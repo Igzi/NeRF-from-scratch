@@ -43,12 +43,10 @@ class Renderer():
     def getPixelValues(self, model, points, chunk = 1024):
         assert points.dim() == 3 and points.shape[-1]==3
 
-        point_array = points.reshape((-1,3))
-        result = torch.zeros(point_array.shape[:-1]+(4,))
+        model_output = torch.zeros(points.shape[:-1]+(4,))
         
-        for i in range(0, point_array.shape[0], chunk):
-            print(point_array[i:i+chunk,...].shape)
-            result[i:i+chunk,...] = model(point_array[i:i+chunk,...])
+        for i in range(0, points.shape[0], chunk):
+            model_output[i:i+chunk,...] = model(points[i:i+chunk,...])
 
-        print(result)
+        
 

@@ -25,9 +25,8 @@ class TinyNerf(torch.nn.Module):
         y = self.out(y)
         rgb = torch.sigmoid(y[..., :3])
         sigma = torch.nn.functional.relu(y[..., 3])
-        sigma = torch.tensor([sigma])
-        
-        return torch.cat([rgb, sigma], dim=-1)
+
+        return torch.cat((rgb, sigma[...,None]), dim = -1)
 
 
 

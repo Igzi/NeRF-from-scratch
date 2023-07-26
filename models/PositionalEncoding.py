@@ -12,4 +12,4 @@ class PositionalEncoding(torch.nn.Module):
         self.out_features = len(self.func_base) * 3
     
     def forward(self, x):
-        return torch.cat([f(x) for f in self.func_base], dim=-1).flatten()
+        return torch.cat([f(x) for f in self.func_base], dim=-1)
