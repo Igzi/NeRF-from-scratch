@@ -28,6 +28,8 @@ class Renderer():
             self.stratified = True
 
     def getSparsePoints(self, ray_origins, ray_dirs):
+        ray_origins = ray_origins.reshape((-1,3))
+        ray_dirs = ray_dirs.reshape((-1,3))
 
         z_samples = torch.linspace(self.near, self.far, self.Nc + 1)[:-1].expand(ray_origins.shape[:-1]+ (self.Nc,))
 
@@ -37,3 +39,16 @@ class Renderer():
         points = z_samples[...,None]*ray_dirs[...,None,:] + ray_origins[...,None,:]
 
         return points
+
+    def getPixelValues(self, model, points, chunk = 1024):
+        assert points.dim() == 3 and points.shape[-1]==3
+
+        point_array = points.reshape((-1,3))
+        result = torch.zeros(point_array.shape[:-1]+(4,))
+        
+        for i in range(0, point_array.shape[0], chunk):
+            print(point_array[i:i+chunk,...].shape)
+            result[i:i+chunk,...] = model(point_array[i:i+chunk,...])
+
+        print(result)
+

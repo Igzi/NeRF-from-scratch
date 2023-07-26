@@ -1,7 +1,7 @@
 import torch
-from positional_encoding import PositionalEncoding
+from models.PositionalEncoding import PositionalEncoding
 
-class TinyNERF(torch.nn.Module):
+class TinyNerf(torch.nn.Module):
     def __init__(self, L, midle_dim=256):
         super().__init__()
         self.positional_encoding = PositionalEncoding(L, passIdentity=True)
@@ -25,6 +25,8 @@ class TinyNERF(torch.nn.Module):
         y = self.out(y)
         rgb = torch.sigmoid(y[..., :3])
         sigma = torch.nn.functional.relu(y[..., 3])
+        sigma = torch.tensor([sigma])
+        
         return torch.cat([rgb, sigma], dim=-1)
 
 

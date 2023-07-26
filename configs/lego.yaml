@@ -1,9 +1,11 @@
-seed: 3
-resume: True
-stats_print_interval: 10
-validation_epoch_interval: 30
-checkpoint_epoch_interval: 30
-checkpoint_path: 'checkpoints/lego_pt3d.pth'
+trainer:
+  seed: 3
+  resume: True
+  max_epochs: 1000
+  lr: 0.0005
+  stats_print_interval: 10
+  checkpoint_epoch_interval: 30
+  checkpoint_path: 'checkpoints/lego_pt3d.pth'
 data:
   dataset_path: './nerf_synthetic/lego/'
   train_size: 10
@@ -17,11 +19,6 @@ test:
   n_frames: 100
   fps: 20
   trajectory_scale: 0.2
-optimizer:
-  max_epochs: 20000
-  lr: 0.0005
-  lr_scheduler_step_size: 5000
-  lr_scheduler_gamma: 0.1
 renderer:
   Nc: 64
   Nf: 128
