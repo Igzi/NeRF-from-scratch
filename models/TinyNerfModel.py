@@ -7,9 +7,9 @@ class TinyNERF(torch.nn.Module):
         self.positional_encoding = PositionalEncoding(L, passIdentity=True)
         input_dim = self.positional_encoding.out_features
         self.fc1 = torch.nn.Linear(input_dim, midle_dim)
-        self.fc2 = [torch.nn.Linear(midle_dim, midle_dim) for i in range(3)]
+        self.fc2 = torch.nn.ModuleList([torch.nn.Linear(midle_dim, midle_dim) for i in range(3)])
         self.residual = torch.nn.Linear(midle_dim+input_dim, midle_dim)
-        self.fc3 = [torch.nn.Linear(midle_dim, midle_dim) for i in range(2)]
+        self.fc3 = torch.nn.ModuleList([torch.nn.Linear(midle_dim, midle_dim) for i in range(2)])
         self.out = torch.nn.Linear(midle_dim, 4)
         print(len(self._modules))
     
