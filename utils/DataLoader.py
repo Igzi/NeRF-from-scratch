@@ -25,22 +25,25 @@ class DataLoader():
         else:
             print("Dataset type ", type, " does not exist")
             return
-        
-        images = torch.tensor([])
-        poses = torch.tensor([])
 
         transform_path = self.dataset_path + "/transforms_" + type + ".json"
         transform_file = open(transform_path)
         transforms = json.load(transform_file)
 
-        for i in range(1,test_size+1):
+        for i in range(test_size):
             frame = transforms['frames'][0]
-            
-            poses = torch.cat([poses, torch.tensor(frame['transform_matrix'])], axis=0) 
-
             image_path = self.dataset_path + frame['file_path'] + ".png"
             image = iio.imread(image_path)
-            images = torch.cat([images, torch.tensor(image)], axis=0) 
+
+            if i==0:
+                images = torch.zeros((test_size,) + image.shape)
+                poses = torch.zeros((test_size,) + torch.tensor(frame['transform_matrix']).shape)
+
+            poses[i] = torch.tensor(frame['transform_matrix'])
+            images[i] = torch.tensor(image)
+
+        if(image.shape[-1]==4):
+            images = images[:,:,:,:3]
 
         return images, poses
 
