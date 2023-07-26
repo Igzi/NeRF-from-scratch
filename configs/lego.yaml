@@ -22,15 +22,12 @@ optimizer:
   lr: 0.0005
   lr_scheduler_step_size: 5000
   lr_scheduler_gamma: 0.1
-raysampler:
-  n_pts_per_ray: 64
-  n_pts_per_ray_fine: 64
-  n_rays_per_image: 1024
+renderer:
+  Nc: 64
+  Nf: 128
   min_depth: 2.0
   max_depth: 6.0
   stratified: True
-  stratified_test: False
-  chunk_size_test: 6000
 implicit_function:
   n_harmonic_functions_xyz: 10
   n_harmonic_functions_dir: 4
