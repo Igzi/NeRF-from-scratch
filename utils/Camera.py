@@ -17,3 +17,11 @@ class Camera():
         world_pos = self.pose[:3,-1]
 
         return world_pos, world_dirs
+    
+    def getRay(self, i, j):
+        camera_dir = torch.tensor([(i-self.W/2)/self.focal, (j-self.H/2)/self.focal, -1])
+        world_dir = camera_dir.float() @ self.pose[:3,:3].T
+
+        world_pos = self.pose[:3,-1]
+
+        return world_pos, world_dir
