@@ -34,7 +34,7 @@ class Renderer():
             z_samples = z_samples + torch.rand(ray_origins.shape[:-1]+ (self.Nc,))*(self.far-self.near)/self.Nc
         
         points = z_samples[...,None]*ray_dirs[...,None,:] + ray_origins[...,None,:]
-        dists = z_samples
+        dists = z_samples * torch.norm(ray_dirs[...,None,:], dim = -1)
         
         r = torch.norm(ray_dirs, dim = -1)
         dirs = torch.stack([torch.acos(ray_dirs[...,2]/r), torch.atan2(ray_dirs[...,1],ray_dirs[...,0])], dim = -1)
