@@ -26,12 +26,12 @@ class TinyNerf(torch.nn.Module):
         rgb = torch.sigmoid(y[..., :3])
         sigma = torch.nn.functional.relu(y[..., 3])
 
-        return torch.cat((rgb, sigma[...,None]), dim = -1)
+        return rgb, sigma
 
 
 
 if __name__ == '__main__':
-    model = TinyNERF(3, 256)
+    model = TinyNerf(3, 256)
     print(model)
     for parameter in model.parameters():
         print(parameter.shape)
