@@ -52,7 +52,7 @@ class Renderer():
             points = points.reshape((-1,)+points.shape[2:])
             dists = dists.reshape((-1,)+dists.shape[2:])
 
-        assert model.device == points.device and points.device == dists.device
+        assert points.device == dists.device
         assert points.dim() == 3 and points.shape[-1]==5 and points.shape[:2] == dists.shape[:2]
 
         device = points.device
