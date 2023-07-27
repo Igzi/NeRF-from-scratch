@@ -28,26 +28,47 @@ class Renderer():
             self.stratified = True
 
     def getSparsePoints(self, ray_origins, ray_dirs):
-        ray_origins = ray_origins.reshape((-1,3))
-        ray_dirs = ray_dirs.reshape((-1,3))
-
-        z_samples = torch.linspace(self.near, self.far, self.Nc + 1)[:-1].expand(ray_origins.shape[:-1]+ (self.Nc,))
+        z_samples = torch.linspace(self.near, self.far, self.Nc + 1)[:-1].expand(ray_origins.shape[:-1] + (self.Nc,))
 
         if(self.stratified):
             z_samples = z_samples + torch.rand(ray_origins.shape[:-1]+ (self.Nc,))*(self.far-self.near)/self.Nc
         
         points = z_samples[...,None]*ray_dirs[...,None,:] + ray_origins[...,None,:]
 
-        return points
+        dists = z_samples
 
-    def getPixelValues(self, model, points, chunk = 1024):
-        assert points.dim() == 3 and points.shape[-1]==3
+        return points, dists
+
+    def getPixelValues(self, model, points, dists, chunk = 1024):
+        assert points.dim() == 3 and points.shape[-1]==3 and points.shape[:2] == dists.shape[:2]
 
         rgb = torch.zeros(points.shape[:-1]+(3,))
         sigma = torch.zeros(points.shape[:-1])
         
         for i in range(0, points.shape[0], chunk):
             rgb[i:i+chunk,...], sigma[i:i+chunk,...] = model(points[i:i+chunk,...])
+
+        inf_distance = 1e10
+        delta = torch.cat([dists[...,1:]-dists[...,:-1], inf_distance*torch.ones(dists.shape[:-1] + (1,))], dim=-1)
+
+        alpha = 1 - torch.exp(-sigma*delta)
+        T = torch.exp(-torch.cumsum(sigma*delta, dim=-1))
+
+        # Shift T by one and set T_0 to 1 for every point
+        T = T.roll(1, dims=-1)
+        T[:,0] = 1
+
+        weights = alpha*T
+
+        pixel_rgb = torch.sum(weights[...,None]*rgb, dim = -2)
+        pixel_sigma = torch.sum(weights*sigma, dim = -1)
+
+        return pixel_rgb, pixel_sigma
+
+
+
+        
+
 
         
 
