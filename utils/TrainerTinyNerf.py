@@ -11,7 +11,9 @@ class TrainerTinyNerf(Trainer):
     def train(self):
         model = TinyNerf(self.Lxyz)
         model.to(self.device)
+
         optimizer = torch.optim.Adam(self.lr)
+        criterion = torch.nn.MSELoss()
 
         for i in range(self.max_epochs):
             optimizer.zero_grad()
@@ -25,6 +27,10 @@ class TrainerTinyNerf(Trainer):
             dists = dists.to(self.device)
 
             rgb = self.renderer.getPixelValues(model, points, dists)
+            loss = criterion(rgb, img)
+
+            loss.backward()
+            optimizer.step()
 
 
 
