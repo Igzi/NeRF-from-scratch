@@ -10,7 +10,7 @@ trainer:
   L_dir: 4
 data:
   dataset_path: './nerf_synthetic/lego/'
-  train_size: 10
+  train_size: 100
   validation_size: 100
   test_size: 200
 test:
