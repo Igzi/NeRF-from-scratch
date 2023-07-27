@@ -66,9 +66,8 @@ class Renderer():
         weights = alpha*T
 
         pixel_rgb = torch.sum(weights[...,None]*rgb, dim = -2)
-        pixel_sigma = torch.sum(weights*sigma, dim = -1)
 
-        return pixel_rgb, pixel_sigma
+        return pixel_rgb
 
 
 
