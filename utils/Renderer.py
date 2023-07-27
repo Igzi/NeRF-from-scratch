@@ -28,16 +28,19 @@ class Renderer():
             self.stratified = True
 
     def getSparsePoints(self, ray_origins, ray_dirs):
-        z_samples = torch.linspace(self.near, self.far, self.Nc + 1)[:-1].expand(ray_origins.shape[:-1] + (self.Nc,))
+        assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
+        device = ray_dirs.device
+
+        z_samples = torch.linspace(self.near, self.far, self.Nc + 1, device = device)[:-1].expand(ray_origins.shape[:-1] + (self.Nc,))
 
         if(self.stratified):
-            z_samples = z_samples + torch.rand(ray_origins.shape[:-1]+ (self.Nc,))*(self.far-self.near)/self.Nc
+            z_samples = z_samples + torch.rand(ray_origins.shape[:-1]+ (self.Nc,), device = device)*(self.far-self.near)/self.Nc
         
         points = z_samples[...,None]*ray_dirs[...,None,:] + ray_origins[...,None,:]
         dists = z_samples * torch.norm(ray_dirs[...,None,:], dim = -1)
         
         r = torch.norm(ray_dirs, dim = -1)
-        dirs = torch.stack([torch.acos(ray_dirs[...,2]/r), torch.atan2(ray_dirs[...,1],ray_dirs[...,0])], dim = -1)
+        dirs = torch.stack([torch.acos(ray_dirs[...,2]/r), torch.atan2(ray_dirs[...,1], ray_dirs[...,0])], dim = -1)
         dirs = dirs[..., None, :].expand((ray_origins.shape[:-1] + (self.Nc, 2)))
 
         points = torch.cat([points, dirs], dim = -1)
