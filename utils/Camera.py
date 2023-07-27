@@ -15,6 +15,7 @@ class Camera():
         world_dirs = camera_dirs @ self.pose[:3,:3].T
 
         world_pos = self.pose[:3,-1]
+        world_pos = world_pos.expand(world_dirs.shape)
 
         return world_pos, world_dirs
     
