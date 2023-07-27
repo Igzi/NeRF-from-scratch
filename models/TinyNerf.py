@@ -14,7 +14,7 @@ class TinyNerf(torch.nn.Module):
         print(len(self._modules))
     
     def forward(self, x):
-        x = self.positional_encoding(x)
+        x = self.positional_encoding(x[..., :3])
         y = torch.nn.functional.relu(self.fc1(x))
         for i in range(len(self.fc2)):
             y = torch.nn.functional.relu(self.fc2[i](y))

@@ -34,13 +34,18 @@ class Renderer():
             z_samples = z_samples + torch.rand(ray_origins.shape[:-1]+ (self.Nc,))*(self.far-self.near)/self.Nc
         
         points = z_samples[...,None]*ray_dirs[...,None,:] + ray_origins[...,None,:]
-
         dists = z_samples
+        
+        r = torch.norm(ray_dirs, dim = -1)
+        dirs = torch.stack([torch.acos(ray_dirs[...,2]/r), torch.atan2(ray_dirs[...,1],ray_dirs[...,0])], dim = -1)
+        dirs = dirs[..., None, :].expand((ray_origins.shape[:-1] + (self.Nc, 2)))
+
+        points = torch.cat([points, dirs], dim = -1)
 
         return points, dists
 
     def getPixelValues(self, model, points, dists, chunk = 1024):
-        assert points.dim() == 3 and points.shape[-1]==3 and points.shape[:2] == dists.shape[:2]
+        assert points.dim() == 3 and points.shape[-1]==5 and points.shape[:2] == dists.shape[:2]
 
         rgb = torch.zeros(points.shape[:-1]+(3,))
         sigma = torch.zeros(points.shape[:-1])
