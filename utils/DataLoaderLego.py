@@ -46,7 +46,7 @@ class DataLoaderLego(DataLoader):
         focal = .5 * W / np.tan(.5 * transforms['camera_angle_x'])
         images = torch.nn.functional.interpolate(images.permute(
             0, 3, 1, 2), (100, 100), mode='bilinear', align_corners=False).permute(0, 2, 3, 1)        
-        
+        images /= 255
         H = H//8
         W = W//8
         focal = focal/8.

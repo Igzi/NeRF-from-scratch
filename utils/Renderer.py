@@ -64,7 +64,7 @@ class Renderer():
             rgb[i:i+chunk,...], sigma[i:i+chunk,...] = model(points[i:i+chunk,...])
 
         inf_distance = 1e10
-        delta = torch.cat([dists[...,1:]-dists[...,:-1], inf_distance*torch.ones(dists.shape[:-1] + (1,))], dim=-1)
+        delta = torch.cat([dists[...,1:]-dists[...,:-1], inf_distance*torch.ones(dists.shape[:-1] + (1,)).to(device)], dim=-1)
 
         alpha = 1 - torch.exp(-sigma*delta)
         T = torch.exp(-torch.cumsum(sigma*delta, dim=-1))

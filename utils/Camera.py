@@ -12,7 +12,7 @@ class Camera():
         i = torch.ones((self.H, 1), device = self.device) @ (torch.arange(0, self.W, device = self.device)[None,:].float())
         j = (torch.arange(0, self.H, device = self.device)[:,None].float()) @ torch.ones((1, self.W),device = self.device)
 
-        camera_dirs = torch.stack([(i-self.W/2)/self.focal, (j-self.H/2)/self.focal, -torch.ones(self.H,self.W)],dim=2)
+        camera_dirs = torch.stack([(i-self.W/2)/self.focal, (j-self.H/2)/self.focal, -torch.ones(self.H,self.W,device = self.device)],dim=2)
         world_dirs = camera_dirs @ self.pose[:3,:3].T
 
         world_pos = self.pose[:3,-1]
