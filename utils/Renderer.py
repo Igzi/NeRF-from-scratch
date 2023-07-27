@@ -47,22 +47,21 @@ class Renderer():
 
         return points, dists
 
-    def getPixelValues(self, model, points, dists, chunk = 1024):
+    def getPixelValues(self, model, points, dists):
         if points.dim() == 4:
             points = points.reshape((-1,)+points.shape[2:])
             dists = dists.reshape((-1,)+dists.shape[2:])
 
         assert points.device == dists.device
         assert points.dim() == 3 and points.shape[-1]==5 and points.shape[:2] == dists.shape[:2]
-
+        
         device = points.device
 
         rgb = torch.zeros(points.shape[:-1]+(3,), device = device)
         sigma = torch.zeros(points.shape[:-1], device = device)
         
-        for i in range(0, points.shape[0], chunk):
-            rgb[i:i+chunk,...], sigma[i:i+chunk,...] = model(points[i:i+chunk,...])
-
+        rgb, sigma = model(points)
+        
         inf_distance = 1e10
         delta = torch.cat([dists[...,1:]-dists[...,:-1], inf_distance*torch.ones(dists.shape[:-1] + (1,)).to(device)], dim=-1)
 
@@ -76,7 +75,7 @@ class Renderer():
         weights = alpha*T
 
         pixel_rgb = torch.sum(weights[...,None]*rgb, dim = -2)
-
+        
         return pixel_rgb
 
 

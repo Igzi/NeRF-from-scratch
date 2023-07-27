@@ -1,3 +1,4 @@
+import time
 import torch
 import numpy as np
 from models.TinyNerf import TinyNerf
@@ -27,19 +28,18 @@ class TrainerTinyNerf(Trainer):
 
             rnd_img = np.random.randint(0, self.images.shape[0])
             img = self.images[rnd_img]
+            
             ray_origins, ray_dirs = self.cameras[rnd_img].getRays()
-
+            
             points, dists = self.renderer.getSparsePoints(ray_origins, ray_dirs)
-            points = points.to(self.device)
-            dists = dists.to(self.device)
-
+            
             rgb = self.renderer.getPixelValues(model, points, dists)
             loss = criterion(rgb, img.reshape((-1,3)).to(rgb.device))
-
+            
             loss.backward()
             optimizer.step()
 
-            if i % 2 == 0:
+            if i % self.stats_step == 0:
                 print(f'Epoch: {i}, Loss: {loss.item()}')
                 test_o, test_d = test_camera.getRays()
                 test_o = test_o.to(rgb.device)
@@ -48,7 +48,7 @@ class TrainerTinyNerf(Trainer):
                 test_points, test_dists = self.renderer.getSparsePoints(test_o, test_d)
                 with torch.no_grad():
                     test_rgb = self.renderer.getPixelValues(model, test_points, test_dists)
-                    test_loss = criterion(test_rgb, test_img.reshape((-1,3)))
+                    test_loss = criterion(test_rgb, test_img.reshape((-1,3)).to(test_rgb.device))
                     test_psnr = -10*torch.log10(test_loss)
                     psnr_list.append(test_psnr.item())
                 
