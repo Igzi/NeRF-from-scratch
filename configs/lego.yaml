@@ -6,6 +6,8 @@ trainer:
   stats_print_interval: 10
   checkpoint_epoch_interval: 30
   checkpoint_path: 'checkpoints/lego_pt3d.pth'
+  L_xyz: 10
+  L_dir: 4
 data:
   dataset_path: './nerf_synthetic/lego/'
   train_size: 10
@@ -25,10 +27,3 @@ renderer:
   min_depth: 2.0
   max_depth: 6.0
   stratified: True
-implicit_function:
-  n_harmonic_functions_xyz: 10
-  n_harmonic_functions_dir: 4
-  n_hidden_neurons_xyz: 256
-  n_hidden_neurons_dir: 128
-  density_noise_std: 0.0
-  n_layers_xyz: 8
