@@ -6,8 +6,8 @@ class Nerf(torch.nn.Module):
         super().__init__()
         self.xyz_encoding = PositionalEncoding(Lxyz, passIdentity=True)
         self.dir_encoding = PositionalEncoding(Ldir, passIdentity=True)
-        xyz_dim = self.xyz_encoding.out_features
-        dir_dim = self.dir_encoding.out_features
+        xyz_dim = 3 * self.xyz_encoding.out_features
+        dir_dim = 2 * self.dir_encoding.out_features
         self.fc1 = torch.nn.Linear(xyz_dim, midle_dim)
         self.fc2 = torch.nn.ModuleList([torch.nn.Linear(midle_dim, midle_dim) for i in range(3)])
         self.residual = torch.nn.Linear(midle_dim+xyz_dim, midle_dim)
