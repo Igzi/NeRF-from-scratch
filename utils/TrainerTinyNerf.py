@@ -4,6 +4,7 @@ import torch
 import numpy as np
 from utils.Trainer import Trainer
 from utils.Camera import Camera
+from utils.Visualizer import Visualizer
 import matplotlib.pyplot as plt
 
 class TrainerTinyNerf(Trainer):
@@ -20,8 +21,11 @@ class TrainerTinyNerf(Trainer):
         criterion = torch.nn.MSELoss()
 
         test_camera = Camera(test_img.shape[1], test_img.shape[2], test_pose[0], focal)
+        visualizer = Visualizer(test_img=test_img, test_camera=test_camera, renderer=self.renderer, device=self.device, criterion=criterion)
         psnr_list = []
         start = time.time()
+        losses = torch.zeros(self.stats_step)
+
         for i in range(self.max_epochs):
             optimizer.zero_grad()
 
@@ -34,7 +38,7 @@ class TrainerTinyNerf(Trainer):
             
             rgb = self.renderer.getPixelValues(self.model, points, dists)
             loss = criterion(rgb, img.reshape((-1,3)).to(rgb.device))
-            
+            losses[i % self.stats_step] = loss.item()
             loss.backward()
             optimizer.step()
 
@@ -49,26 +53,7 @@ class TrainerTinyNerf(Trainer):
                     }, self.checkpoint_path + f"{dt_string}.pt")
 
             if i % self.stats_step == 0:
-                print(f'Epoch: {i}, Loss: {loss.item()}, Secs per iter: {(time.time()-start)/self.stats_step}')
+                loss_mean = losses.mean()
+                print(f'Epoch: {i}, Average loss: {loss_mean}, Secs per iter: {(time.time()-start)/self.stats_step}')
+                visualizer.visualize(i, time.time()-start, psnr_list, self.model)
                 start = time.time()
-                
-                test_o, test_d = test_camera.getRays()
-                test_o = test_o.to(rgb.device)
-                test_d= test_d.to(rgb.device)
-                
-                test_points, test_dists = self.renderer.getSparsePoints(test_o, test_d)
-                with torch.no_grad():
-                    test_rgb = self.renderer.getPixelValues(self.model, test_points, test_dists)
-                    test_loss = criterion(test_rgb, test_img.reshape((-1,3)).to(test_rgb.device))
-                    test_psnr = -10*torch.log10(test_loss)
-                    psnr_list.append(test_psnr.item())
-                
-                print(f'Test PSNR: {test_psnr.item()}')
-                print(test_rgb.shape)
-                plt.subplot(2,2,3)
-                plt.imshow(test_rgb.cpu().reshape((100,100,3)).numpy())
-                plt.subplot(2,2,4)
-                plt.imshow(test_img[0])
-                plt.subplot(2,1,1)
-                plt.plot(psnr_list)
-                plt.show()
