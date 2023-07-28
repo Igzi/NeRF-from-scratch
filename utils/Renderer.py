@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import WeightedRandomSampler
 
 class Renderer():
     def __init__(self, config):
@@ -27,15 +28,7 @@ class Renderer():
         else :
             self.stratified = True
 
-    def getSparsePoints(self, ray_origins, ray_dirs):
-        assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
-        device = ray_dirs.device
-
-        z_samples = torch.linspace(self.near, self.far, self.Nc + 1, device = device)[:-1].expand(ray_origins.shape[:-1] + (self.Nc,))
-
-        if(self.stratified):
-            z_samples = z_samples + torch.rand(ray_origins.shape[:-1]+ (self.Nc,), device = device)*(self.far-self.near)/self.Nc
-        
+    def getPointsFromDepth(self, ray_origins, ray_dirs, z_samples):
         points = z_samples[...,None]*ray_dirs[...,None,:] + ray_origins[...,None,:]
         dists = z_samples * torch.norm(ray_dirs[...,None,:], dim = -1)
         
@@ -47,7 +40,28 @@ class Renderer():
 
         return points, dists
 
-    def getPixelValues(self, model, points, dists):
+    def getSparsePoints(self, ray_origins, ray_dirs, return_samples = False):
+        assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
+        device = ray_dirs.device
+
+        z_samples = torch.linspace(self.near, self.far, self.Nc + 1, device = device)[:-1].expand(ray_origins.shape[:-1] + (self.Nc,))
+
+        if(self.stratified):
+            z_samples = z_samples + torch.rand(ray_origins.shape[:-1] + (self.Nc,), device = device)*(self.far-self.near)/self.Nc
+        
+        if return_samples:
+            return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples), z_samples
+        else:
+            return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples)
+    
+    def getFinePoints(self, ray_origins, ray_dirs, sparse_samples, weights):
+        assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
+        device = ray_dirs.device
+
+        samples = WeightedRandomSampler(weights)
+        return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples)
+
+    def getPixelValues(self, model, points, dists, return_weights = False):
         if points.dim() == 4:
             points = points.reshape((-1,)+points.shape[2:])
             dists = dists.reshape((-1,)+dists.shape[2:])
@@ -76,7 +90,10 @@ class Renderer():
 
         pixel_rgb = torch.sum(weights[...,None]*rgb, dim = -2)
         
-        return pixel_rgb
+        if return_weights:
+            return pixel_rgb, weights
+        else:
+            return pixel_rgb
 
 
 
