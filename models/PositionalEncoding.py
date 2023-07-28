@@ -9,7 +9,7 @@ class PositionalEncoding(torch.nn.Module):
         self.func_base = sin_base + cos_base
         if passIdentity:
             self.func_base.append(lambda x: x)
-        self.out_features = len(self.func_base) * 3
+        self.out_features = len(self.func_base)
     
     def forward(self, x):
         # return [f(x) for f in self.func_base]
