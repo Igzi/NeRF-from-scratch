@@ -63,13 +63,14 @@ class Renderer():
         H, W = sparse_samples.shape[0], self.Nf # size of samples
 
         sparse_samples = torch.cat([sparse_samples, self.far*torch.ones((H, 1))], dim = -1)
-        # print(torch.sum(weights < 0))
-        # print(torch.sum(weights,dim=1) == 0)
-        # weights += 1e-8
-        sample_idx = torch.multinomial(weights, num_samples = self.Nf, replacement=True)
+
+        sample_idx = torch.multinomial(weights + 1e-8, num_samples = self.Nf, replacement=True)
+        
         rows = (torch.arange(0, H, device = device)[:,None]) @ torch.ones((1, self.Nf),device = device).long()
 
-        samples = (sparse_samples[rows, sample_idx+1]-sparse_samples[rows, sample_idx])*torch.rand((H, W))
+        samples = sparse_samples[rows, sample_idx]+(sparse_samples[rows, sample_idx+1]-sparse_samples[rows, sample_idx])*torch.rand((H, W))
+        samples, _ = torch.sort(samples, dim = -1)
+
         ray_origins = ray_origins.reshape((-1,3))
         ray_dirs = ray_dirs.reshape((-1,3))
         
@@ -95,13 +96,14 @@ class Renderer():
         delta = torch.cat([dists[...,1:]-dists[...,:-1], inf_distance*torch.ones(dists.shape[:-1] + (1,)).to(device)], dim=-1)
 
         alpha = 1 - torch.exp(-sigma*delta)
-        T = torch.cumprod(1-alpha+1e-8, dim=-1)
+        print("Alpha_max: ", torch.max(alpha))
+        T = torch.cumprod(1 - alpha + 1e-8, dim=-1)
 
         # Shift T by one and set T_0 to 1 for every point
         T = T.roll(1, dims=-1)
         T[:,0] = 1
 
-        weights = alpha*T + 1e-8 # Add epsilon to avoid numerical issues
+        weights = alpha*T
 
         pixel_rgb = torch.sum(weights[...,None]*rgb, dim = -2)
         

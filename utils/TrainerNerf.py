@@ -25,7 +25,7 @@ class TrainerNerf(Trainer):
 
         # ray_dirs, ray_origins, images
         print(ray_dirs.shape, ray_origins.shape, self.images.shape)
-        all_samples = torch.stack([ray_dirs, ray_origins, self.images], dim=-2)
+        all_samples = torch.stack([ray_dirs, ray_origins, self.images], dim=-1)
         print(all_samples.shape)
         all_samples = all_samples.reshape((-1, all_samples.shape[-2], all_samples.shape[-1]))
         print(all_samples.shape)
