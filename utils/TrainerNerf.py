@@ -80,7 +80,7 @@ class TrainerNerf(Trainer):
                 model_fine.eval()
                 loss_mean = losses.mean()
                 print(f'Epoch: {i}, Average loss: {loss_mean}, Secs per iter: {(time.time()-start)/self.stats_step}')
-                visualizer.visualize(i, time.time()-start, psnr_list, model)
+                visualizer.visualize(i, time.time()-start, psnr_list, self.model)
                 start = time.time()
                 scheduler.step()
                 model_sparse.train()
