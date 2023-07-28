@@ -1,7 +1,7 @@
 from utils.Renderer import Renderer
 from utils.Camera import Camera
 class Trainer():
-    def __init__(self, model, device, images, cameras: list[Camera], renderer: Renderer, config):
+    def __init__(self, model, device, images, cameras, renderer, config):
         self.model = model
         self.device = device
         self.images = images

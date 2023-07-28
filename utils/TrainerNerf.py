@@ -17,9 +17,9 @@ class TrainerNerf(Trainer):
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
         model_sparse, model_fine = self.model
-
-        ray_origins = torch.zeros(self.images.shape)
-        ray_dirs = torch.zeros(self.images.shape)
+        
+        ray_origins = torch.zeros(self.images.shape, device=self.device)
+        ray_dirs = torch.zeros(self.images.shape, device=self.device)
         for i in range(len(self.cameras)):
             ray_origins[i], ray_dirs[i] = self.cameras[i].getRays()
 
@@ -33,7 +33,7 @@ class TrainerNerf(Trainer):
         all_samples = all_samples[perm]
 
         optimizer = torch.optim.Adam(list(model_sparse.parameters()) + list(model_fine.parameters()),lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.gamma)
+        #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.gamma)
         criterion = torch.nn.MSELoss()
 
         test_camera = Camera(test_img.shape[1], test_img.shape[2], test_pose[0], focal)
@@ -70,7 +70,8 @@ class TrainerNerf(Trainer):
                 dt_string = now.strftime("%d%m%Y%H%M%S")
                 torch.save({
                     'epoch': i,
-                    'model_state_dict': model.state_dict(),
+                    'model_fine_state_dict': model_fine.state_dict(),
+                    'model_sparse_state_dict': model_sparse.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'train_loss_history': psnr_list,
                     }, self.checkpoint_path + f"{dt_string}.pt")
@@ -82,6 +83,6 @@ class TrainerNerf(Trainer):
                 print(f'Epoch: {i}, Average loss: {loss_mean}, Secs per iter: {(time.time()-start)/self.stats_step}')
                 visualizer.visualize(i, time.time()-start, psnr_list, model_fine)
                 start = time.time()
-                scheduler.step()
+                #scheduler.step()
                 model_sparse.train()
                 model_fine.train()
