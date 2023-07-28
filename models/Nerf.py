@@ -18,8 +18,8 @@ class Nerf(torch.nn.Module):
         print(len(self._modules))
     
     def forward(self, x):
-        xyz = self.positional_encoding(x[..., :3])
-        dir = self.positional_encoding(x[..., 3:])
+        xyz = self.xyz_encoding(x[..., :3])
+        dir = self.dir_encoding(x[..., 3:])
         y = torch.nn.functional.relu(self.fc1(xyz))
         for i in range(len(self.fc2)):
             y = torch.nn.functional.relu(self.fc2[i](y))

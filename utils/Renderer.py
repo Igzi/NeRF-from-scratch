@@ -63,7 +63,9 @@ class Renderer():
         H, W = sparse_samples.shape[0], self.Nf # size of samples
 
         sparse_samples = torch.cat([sparse_samples, self.far*torch.ones((H, 1))], dim = -1)
-        
+        # print(torch.sum(weights < 0))
+        # print(torch.sum(weights,dim=1) == 0)
+        # weights += 1e-8
         sample_idx = torch.multinomial(weights, num_samples = self.Nf, replacement=True)
         rows = (torch.arange(0, H, device = device)[:,None]) @ torch.ones((1, self.Nf),device = device).long()
 
@@ -99,7 +101,7 @@ class Renderer():
         T = T.roll(1, dims=-1)
         T[:,0] = 1
 
-        weights = alpha*T
+        weights = alpha*T + 1e-8 # Add epsilon to avoid numerical issues
 
         pixel_rgb = torch.sum(weights[...,None]*rgb, dim = -2)
         
