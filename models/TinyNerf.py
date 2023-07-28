@@ -5,7 +5,7 @@ class TinyNerf(torch.nn.Module):
     def __init__(self, L, midle_dim=256):
         super().__init__()
         self.positional_encoding = PositionalEncoding(L, passIdentity=True)
-        input_dim = self.positional_encoding.out_features
+        input_dim = 3 * self.positional_encoding.out_features
         self.fc1 = torch.nn.Linear(input_dim, midle_dim)
         self.fc2 = torch.nn.ModuleList([torch.nn.Linear(midle_dim, midle_dim) for i in range(3)])
         self.residual = torch.nn.Linear(midle_dim+input_dim, midle_dim)
