@@ -1,11 +1,11 @@
 trainer:
   seed: 3
   resume: True
-  max_epochs: 1000
+  max_epochs: 10000
   lr: 0.0005
-  stats_print_interval: 25
-  checkpoint_epoch_interval: 30
-  checkpoint_path: 'checkpoints/lego_pt3d.pth'
+  stats_print_interval: 100
+  checkpoint_epoch_interval: 1000
+  checkpoint_path: './checkpoints/tinynerf_lego_pt3d'
   L_xyz: 10
   L_dir: 4
 data:

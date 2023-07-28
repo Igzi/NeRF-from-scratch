@@ -66,7 +66,7 @@ class Renderer():
         delta = torch.cat([dists[...,1:]-dists[...,:-1], inf_distance*torch.ones(dists.shape[:-1] + (1,)).to(device)], dim=-1)
 
         alpha = 1 - torch.exp(-sigma*delta)
-        T = torch.exp(-torch.cumsum(sigma*delta, dim=-1))
+        T = torch.cumprod(1-alpha+1e-8, dim=-1)
 
         # Shift T by one and set T_0 to 1 for every point
         T = T.roll(1, dims=-1)

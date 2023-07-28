@@ -1,4 +1,5 @@
 import time
+from datetime import datetime
 import torch
 import numpy as np
 from models.TinyNerf import TinyNerf
@@ -18,11 +19,18 @@ class TrainerTinyNerf(Trainer):
         model = TinyNerf(self.Lxyz)
         model.to(self.device)
 
-        optimizer = torch.optim.Adam(model.parameters(),lr=self.lr, betas=(0.9, 0.999), eps=1e-7)
+        for param in model.parameters():
+            if len(param.shape) >= 2:
+                torch.nn.init.xavier_uniform_(param)
+            else:
+                torch.nn.init.zeros_(param)
+
+        optimizer = torch.optim.Adam(model.parameters(),lr=self.lr)
         criterion = torch.nn.MSELoss()
 
         test_camera = Camera(test_img.shape[1], test_img.shape[2], test_pose[0], focal)
         psnr_list = []
+        start = time.time()
         for i in range(self.max_epochs):
             optimizer.zero_grad()
 
@@ -39,8 +47,20 @@ class TrainerTinyNerf(Trainer):
             loss.backward()
             optimizer.step()
 
+            if i % self.checkpoint_step == 0 and i > 0:
+                now = datetime.now()
+                dt_string = now.strftime("%d%m%Y%H%M%S")
+                torch.save({
+                    'epoch': i,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'train_loss_history': psnr_list,
+                    }, self.checkpoint_path + f"{dt_string}.pt")
+
             if i % self.stats_step == 0:
-                print(f'Epoch: {i}, Loss: {loss.item()}')
+                print(f'Epoch: {i}, Loss: {loss.item()}, Secs per iter: {(time.time()-start)/self.stats_step}')
+                start = time.time()
+                
                 test_o, test_d = test_camera.getRays()
                 test_o = test_o.to(rgb.device)
                 test_d= test_d.to(rgb.device)
@@ -54,8 +74,10 @@ class TrainerTinyNerf(Trainer):
                 
                 print(f'Test PSNR: {test_psnr.item()}')
                 print(test_rgb.shape)
-                plt.subplot(1,2,1)
+                plt.subplot(2,2,3)
                 plt.imshow(test_rgb.cpu().reshape((100,100,3)).numpy())
-                plt.subplot(1,2,2)
+                plt.subplot(2,2,4)
+                plt.imshow(test_img[0])
+                plt.subplot(2,1,1)
                 plt.plot(psnr_list)
                 plt.show()
