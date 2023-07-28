@@ -18,15 +18,6 @@ class TrainerNerf(Trainer):
         torch.manual_seed(self.seed)
         model_sparse, model_fine = self.model
 
-        for model in [model_sparse, model_fine]:
-            for param in model.parameters():
-                if len(param.shape) >= 2:
-                    torch.nn.init.xavier_uniform_(param)
-                else:
-                    torch.nn.init.zeros_(param)
-
-
-
         ray_origins = torch.zeros(self.images.shape)
         ray_dirs = torch.zeros(self.images.shape)
         for i in range(len(self.cameras)):
