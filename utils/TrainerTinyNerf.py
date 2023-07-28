@@ -2,7 +2,6 @@ import time
 from datetime import datetime
 import torch
 import numpy as np
-from models.TinyNerf import TinyNerf
 from utils.Trainer import Trainer
 from utils.Camera import Camera
 import matplotlib.pyplot as plt
@@ -10,22 +9,14 @@ import matplotlib.pyplot as plt
 class TrainerTinyNerf(Trainer):
     def __init__(self, model, device, images, cameras, renderer, config):
         super().__init__(model, device, images, cameras, renderer, config)
-        self.Lxyz = config['L_xyz']
     
     def train(self, test_img, test_pose, focal):
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
         
-        model = TinyNerf(self.Lxyz)
-        model.to(self.device)
+        self.model.to(self.device)
 
-        for param in model.parameters():
-            if len(param.shape) >= 2:
-                torch.nn.init.xavier_uniform_(param)
-            else:
-                torch.nn.init.zeros_(param)
-
-        optimizer = torch.optim.Adam(model.parameters(),lr=self.lr)
+        optimizer = torch.optim.Adam(self.model.parameters(),lr=self.lr)
         criterion = torch.nn.MSELoss()
 
         test_camera = Camera(test_img.shape[1], test_img.shape[2], test_pose[0], focal)
@@ -41,7 +32,7 @@ class TrainerTinyNerf(Trainer):
             
             points, dists = self.renderer.getSparsePoints(ray_origins, ray_dirs)
             
-            rgb = self.renderer.getPixelValues(model, points, dists)
+            rgb = self.renderer.getPixelValues(self.model, points, dists)
             loss = criterion(rgb, img.reshape((-1,3)).to(rgb.device))
             
             loss.backward()
@@ -52,7 +43,7 @@ class TrainerTinyNerf(Trainer):
                 dt_string = now.strftime("%d%m%Y%H%M%S")
                 torch.save({
                     'epoch': i,
-                    'model_state_dict': model.state_dict(),
+                    'model_state_dict': self.model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'train_loss_history': psnr_list,
                     }, self.checkpoint_path + f"{dt_string}.pt")
@@ -67,7 +58,7 @@ class TrainerTinyNerf(Trainer):
                 
                 test_points, test_dists = self.renderer.getSparsePoints(test_o, test_d)
                 with torch.no_grad():
-                    test_rgb = self.renderer.getPixelValues(model, test_points, test_dists)
+                    test_rgb = self.renderer.getPixelValues(self.model, test_points, test_dists)
                     test_loss = criterion(test_rgb, test_img.reshape((-1,3)).to(test_rgb.device))
                     test_psnr = -10*torch.log10(test_loss)
                     psnr_list.append(test_psnr.item())

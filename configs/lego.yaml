@@ -6,6 +6,7 @@ trainer:
   stats_print_interval: 100
   checkpoint_epoch_interval: 1000
   checkpoint_path: './checkpoints/tinynerf_lego_pt3d'
+model:
   L_xyz: 10
   L_dir: 4
 data:

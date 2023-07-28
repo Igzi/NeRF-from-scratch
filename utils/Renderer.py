@@ -1,5 +1,4 @@
 import torch
-from torch.utils.data import WeightedRandomSampler
 
 class Renderer():
     def __init__(self, config):
@@ -55,11 +54,15 @@ class Renderer():
             return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples)
     
     def getFinePoints(self, ray_origins, ray_dirs, sparse_samples, weights):
+        assert weights.dim == 2 and sparse_samples.dim == 2
         assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
+
         device = ray_dirs.device
 
-        samples = WeightedRandomSampler(weights, num_samples = 10, replacement=True)
-        return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples)
+        sparse_samples = torch.cat([sparse_samples, self.far*torch.ones(sparse_samples.shape[1])], dim = -1)
+        samples = torch.multinomial(weights, num_samples = self.Nf, replacement=True)
+
+        
 
     def getPixelValues(self, model, points, dists, return_weights = False):
         if points.dim() == 4:
