@@ -33,7 +33,7 @@ class Renderer():
         
         r = torch.norm(ray_dirs, dim = -1)
         dirs = torch.stack([torch.acos(ray_dirs[...,2]/r), torch.atan2(ray_dirs[...,1], ray_dirs[...,0])], dim = -1)
-        dirs = dirs[..., None, :].expand((ray_origins.shape[:-1] + (self.Nc, 2)))
+        dirs = dirs[..., None, :].expand((ray_origins.shape[:-1] + (z_samples.shape[-1], 2)))
 
         points = torch.cat([points, dirs], dim = -1)
 
@@ -43,26 +43,36 @@ class Renderer():
         assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
         device = ray_dirs.device
 
-        z_samples = torch.linspace(self.near, self.far, self.Nc + 1, device = device)[:-1].expand(ray_origins.shape[:-1] + (self.Nc,))
+        z_samples = torch.linspace(self.near, self.far, self.Nc + 1, device = device)[:-1]
 
         if(self.stratified):
             z_samples = z_samples + torch.rand(ray_origins.shape[:-1] + (self.Nc,), device = device)*(self.far-self.near)/self.Nc
         
+        points, dists = self.getPointsFromDepth(ray_origins, ray_dirs, z_samples)
         if return_samples:
-            return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples), z_samples
+            return points, dists, z_samples
         else:
-            return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples)
+            return points, dists
     
     def getFinePoints(self, ray_origins, ray_dirs, sparse_samples, weights):
-        assert weights.dim == 2 and sparse_samples.dim == 2
+        assert weights.dim() == 2 and sparse_samples.dim() == 2
         assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
 
         device = ray_dirs.device
 
-        sparse_samples = torch.cat([sparse_samples, self.far*torch.ones(sparse_samples.shape[1])], dim = -1)
-        samples = torch.multinomial(weights, num_samples = self.Nf, replacement=True)
+        H, W = sparse_samples.shape[0], self.Nf # size of samples
 
+        sparse_samples = torch.cat([sparse_samples, self.far*torch.ones((H, 1))], dim = -1)
         
+        sample_idx = torch.multinomial(weights, num_samples = self.Nf, replacement=True)
+        rows = (torch.arange(0, H, device = device)[:,None]) @ torch.ones((1, self.Nf),device = device).long()
+
+        samples = (sparse_samples[rows, sample_idx+1]-sparse_samples[rows, sample_idx])*torch.rand((H, W))
+        ray_origins = ray_origins.reshape((-1,3))
+        ray_dirs = ray_dirs.reshape((-1,3))
+        
+        return self.getPointsFromDepth(ray_origins, ray_dirs, samples)
+
 
     def getPixelValues(self, model, points, dists, return_weights = False):
         if points.dim() == 4:
