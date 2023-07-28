@@ -58,7 +58,7 @@ class Renderer():
         assert ray_dirs.device == ray_origins.device and ray_dirs.shape == ray_origins.shape
         device = ray_dirs.device
 
-        samples = WeightedRandomSampler(weights)
+        samples = WeightedRandomSampler(weights, num_samples = 10, replacement=True)
         return self.getPointsFromDepth(ray_origins, ray_dirs, z_samples)
 
     def getPixelValues(self, model, points, dists, return_weights = False):
