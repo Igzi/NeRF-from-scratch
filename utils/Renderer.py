@@ -61,7 +61,7 @@ class Renderer():
         device = ray_dirs.device
 
         H, W = sparse_samples.shape[0], self.Nf # size of samples
-
+        
         sparse_samples = torch.cat([sparse_samples, self.far*torch.ones((H, 1), device=device)], dim = -1)
 
         sample_idx = torch.multinomial(weights + 1e-8, num_samples = self.Nf, replacement=True)
@@ -70,9 +70,9 @@ class Renderer():
         rows = rows.to(device)
         
         samples = sparse_samples[rows, sample_idx]+(sparse_samples[rows, sample_idx+1]-sparse_samples[rows, sample_idx])*torch.rand((H, W),device = device)
-        samples = torch.cat([samples, sparse_samples], dim = -1)
+        samples = torch.cat([samples, sparse_samples[:,:-1]], dim = -1)
         samples, _ = torch.sort(samples, dim = -1)
-
+        
         ray_origins = ray_origins.reshape((-1,3))
         ray_dirs = ray_dirs.reshape((-1,3))
         
@@ -88,7 +88,7 @@ class Renderer():
         assert points.dim() == 3 and points.shape[-1]==5 and points.shape[:2] == dists.shape[:2]
         
         device = points.device
-
+        
         rgb = torch.zeros(points.shape[:-1]+(3,), device = device)
         sigma = torch.zeros(points.shape[:-1], device = device)
         

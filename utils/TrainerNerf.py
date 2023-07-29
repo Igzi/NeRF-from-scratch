@@ -13,6 +13,7 @@ class TrainerNerf(Trainer):
         super().__init__(model, device, images, cameras, renderer, config)
         self.gamma = config['gamma']
         self.batch_size = config['batch_size']
+        self.lr_decay_steps = config['lr_decay_steps']
     def train(self, test_img, test_pose, focal):
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
@@ -33,9 +34,12 @@ class TrainerNerf(Trainer):
         del ray_dirs
         del ray_origins
         del self.images
+
+        num_decay_steps = self.lr_decay_steps
+        gamma = np.exp(np.log(self.gamma)/num_decay_steps)
+        
         optimizer = torch.optim.Adam(list(model_sparse.parameters()) + list(model_fine.parameters()),lr=self.lr)
-        #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.gamma)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 100, 5e-6)
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=gamma)
         criterion = torch.nn.MSELoss()
 
         test_camera = Camera(test_img.shape[1], test_img.shape[2], test_pose[0], focal)
@@ -60,7 +64,6 @@ class TrainerNerf(Trainer):
             batch_images = batch_samples[:,:,2]
 
             optimizer.zero_grad()
-                        
             
             points, dists, sparse_samples = self.renderer.getSparsePoints(batch_ray_origins, batch_ray_dirs, return_samples=True)
             sparse_rgb, weights = self.renderer.getPixelValues(model_sparse, points, dists, return_weights=True)
@@ -68,21 +71,14 @@ class TrainerNerf(Trainer):
             fine_points, fine_dists = self.renderer.getFinePoints(batch_ray_origins, batch_ray_dirs, sparse_samples, weights)
             rgb = self.renderer.getPixelValues(model_fine, fine_points, fine_dists)
 
-            assert not torch.any(rgb > 1.1)
-            assert not torch.any(rgb < -0.1)
-            assert not torch.any(sparse_rgb > 1.1) 
-            assert not torch.any(sparse_rgb < -0.1)
-            assert not torch.any(batch_images > 1.1) 
-            assert not torch.any(batch_images < -0.1)
-
             loss = criterion(rgb, batch_images) + criterion(sparse_rgb, batch_images)
             
             losses[i % self.stats_step] = loss.item()
             loss.backward()
             optimizer.step()
             scheduler.step()
-
-            if i % self.checkpoint_step == 0 and i > 0:
+            
+            if (i % self.checkpoint_step == 0 and i > 0) or (i == (self.max_epochs - 1)):
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y%H%M%S")
                 torch.save({
