@@ -71,6 +71,7 @@ class Renderer():
         rows = rows.to(device)
         
         samples = sparse_samples[rows, sample_idx]+(sparse_samples[rows, sample_idx+1]-sparse_samples[rows, sample_idx])*torch.rand((H, W),device = device)
+        samples = torch.cat([samples, sparse_samples], dim = -1)
         samples, _ = torch.sort(samples, dim = -1)
 
         ray_origins = ray_origins.reshape((-1,3))

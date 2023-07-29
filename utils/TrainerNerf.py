@@ -24,11 +24,10 @@ class TrainerNerf(Trainer):
             ray_origins[i], ray_dirs[i] = self.cameras[i].getRays()
 
         # ray_dirs, ray_origins, images
-        print(ray_dirs.shape, ray_origins.shape, self.images.shape)
         all_samples = torch.stack([ray_dirs, ray_origins, self.images], dim=-1)
-        print(all_samples.shape)
         all_samples = all_samples.reshape((-1, all_samples.shape[-2], all_samples.shape[-1]))
-        print(all_samples.shape)
+        all_samples = all_samples.to('cpu') # remove rays from gpu memory
+        
         perm = torch.randperm(all_samples.shape[0])
         all_samples = all_samples[perm]
         del ray_dirs
@@ -55,7 +54,7 @@ class TrainerNerf(Trainer):
 
             batch_samples = all_samples[(j*self.batch_size):((j+1)*self.batch_size)]
             j += 1
-            # batch_samples = batch_samples.to(self.device)
+            batch_samples = batch_samples.to(self.device)
             batch_ray_dirs = batch_samples[:,:,0]
             batch_ray_origins = batch_samples[:,:,1]
             batch_images = batch_samples[:,:,2]
