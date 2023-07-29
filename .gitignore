@@ -5,3 +5,4 @@ checkpoints/*.pt
 models/.ipynb_checkpoints/*
 configs/.ipynb_checkpoints/*
 
+nerf_synthetic/drums/
