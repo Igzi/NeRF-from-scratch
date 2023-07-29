@@ -13,6 +13,7 @@ class TrainerNerf(Trainer):
         super().__init__(model, device, images, cameras, renderer, config)
         self.gamma = config['gamma']
         self.batch_size = config['batch_size']
+        self.lr_decay_steps = config['lr_decay_steps']
     def train(self, test_img, test_pose, focal):
         np.random.seed(self.seed)
         torch.manual_seed(self.seed)
@@ -33,9 +34,12 @@ class TrainerNerf(Trainer):
         del ray_dirs
         del ray_origins
         del self.images
+
+        num_decay_steps = self.lr_decay_steps
+        gamma = np.exp(np.log(self.gamma)/num_decay_steps)
+        
         optimizer = torch.optim.Adam(list(model_sparse.parameters()) + list(model_fine.parameters()),lr=self.lr)
-        #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.gamma)
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 100, 5e-6)
+        scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.gamma)
         criterion = torch.nn.MSELoss()
 
         test_camera = Camera(test_img.shape[1], test_img.shape[2], test_pose[0], focal)
@@ -60,7 +64,6 @@ class TrainerNerf(Trainer):
             batch_images = batch_samples[:,:,2]
 
             optimizer.zero_grad()
-                        
             
             points, dists, sparse_samples = self.renderer.getSparsePoints(batch_ray_origins, batch_ray_dirs, return_samples=True)
             sparse_rgb, weights = self.renderer.getPixelValues(model_sparse, points, dists, return_weights=True)
