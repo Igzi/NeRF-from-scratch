@@ -9,7 +9,7 @@ class DataLoaderLego(DataLoader):
     def __init__(self, config):
         super().__init__(config)
 
-    def getDataset(self, type):
+    def getDataset(self, type, downsample = False):
         if type == 'train':
             dataset = 'train'
             test_size = self.train_size
@@ -44,11 +44,12 @@ class DataLoaderLego(DataLoader):
 
         H, W = images[0].shape[:2]
         focal = .5 * W / np.tan(.5 * transforms['camera_angle_x'])
-        # images = torch.nn.functional.interpolate(images.permute(
-        #     0, 3, 1, 2), (100, 100)).permute(0, 2, 3, 1)        
-        # H = H//8
-        # W = W//8
-        # focal = focal/8.
+        if downsample:
+            images = torch.nn.functional.interpolate(images.permute(
+                0, 3, 1, 2), (100, 100)).permute(0, 2, 3, 1)        
+            H = H//8
+            W = W//8
+            focal = focal/8.
         images /= 255
 
         return images, poses, focal
