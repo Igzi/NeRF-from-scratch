@@ -1,0 +1,29 @@
+trainer:
+  seed: 3
+  resume: True
+  max_epochs: 10000
+  lr: 0.0005
+  stats_print_interval: 100
+  checkpoint_epoch_interval: 1000
+  checkpoint_path: './checkpoints/tinynerf_drums_pt3d'
+model:
+  L_xyz: 10
+data:
+  dataset_path: './nerf_synthetic/drums/'
+  train_size: 100
+  validation_size: 100
+  test_size: 200
+test:
+  mode: 'evaluation'
+  trajectory_type: 'circular'
+  up: [0.0, 0.0, 1.0]
+  scene_center: [0.0, 0.0, 0.0]
+  n_frames: 100
+  fps: 20
+  trajectory_scale: 0.2
+renderer:
+  Nc: 64
+  Nf: 128
+  min_depth: 2.0
+  max_depth: 6.0
+  stratified: True

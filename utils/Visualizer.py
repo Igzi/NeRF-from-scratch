@@ -33,7 +33,7 @@ class Visualizer():
         print(f'Test PSNR: {test_psnr.item()}')
         
         plt.subplot(2,2,3)
-        plt.imshow(test_rgb.cpu().reshape((800,800,3)).numpy())
+        plt.imshow(test_rgb.cpu().reshape(self.test_img.shape).numpy())
         plt.subplot(2,2,4)
         plt.imshow(self.test_img[0])
         plt.subplot(2,1,1)
