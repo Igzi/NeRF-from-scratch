@@ -77,8 +77,8 @@ class TrainerNerf(Trainer):
             loss.backward()
             optimizer.step()
             scheduler.step()
-
-            if (i % self.checkpoint_step == 0 and i > 0) or i == (self.max_epochs - 1):
+            
+            if (i % self.checkpoint_step == 0 and i > 0) or (i == (self.max_epochs - 1)):
                 now = datetime.now()
                 dt_string = now.strftime("%d%m%Y%H%M%S")
                 torch.save({
