@@ -20,13 +20,10 @@ class Visualizer():
             test_points, test_dists = self.renderer.getSparsePoints(test_o, test_d)
             test_points = test_points.reshape((-1,)+test_points.shape[-2:])
             test_dists = test_dists.reshape((-1,test_dists.shape[-1]))
-            print(test_dists.shape)
     
             chunk_size = 400
             test_rgb = torch.zeros_like(self.test_img).reshape((-1,3))
-            print(test_rgb.shape)
-            print(test_points.shape)
-            print(test_dists.shape)
+            
             for i in range(len(test_rgb)//chunk_size):
                 test_rgb[i*chunk_size:(i+1)*chunk_size,:] = self.renderer.getPixelValues(model, test_points[i*chunk_size:(i+1)*chunk_size,...], test_dists[i*chunk_size:(i+1)*chunk_size,...])
             test_loss = self.criterion(test_rgb, self.test_img.reshape((-1,3)).to(test_rgb.device))
@@ -34,7 +31,7 @@ class Visualizer():
             psnr_list.append(test_psnr.item())
             
         print(f'Test PSNR: {test_psnr.item()}')
-        print(test_rgb.shape)
+        
         plt.subplot(2,2,3)
         plt.imshow(test_rgb.cpu().reshape((800,800,3)).numpy())
         plt.subplot(2,2,4)

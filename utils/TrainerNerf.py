@@ -68,13 +68,6 @@ class TrainerNerf(Trainer):
             fine_points, fine_dists = self.renderer.getFinePoints(batch_ray_origins, batch_ray_dirs, sparse_samples, weights)
             rgb = self.renderer.getPixelValues(model_fine, fine_points, fine_dists)
 
-            assert not torch.any(rgb > 1.1)
-            assert not torch.any(rgb < -0.1)
-            assert not torch.any(sparse_rgb > 1.1) 
-            assert not torch.any(sparse_rgb < -0.1)
-            assert not torch.any(batch_images > 1.1) 
-            assert not torch.any(batch_images < -0.1)
-
             loss = criterion(rgb, batch_images) + criterion(sparse_rgb, batch_images)
             
             losses[i % self.stats_step] = loss.item()
