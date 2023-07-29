@@ -31,9 +31,12 @@ class TrainerNerf(Trainer):
         print(all_samples.shape)
         perm = torch.randperm(all_samples.shape[0])
         all_samples = all_samples[perm]
-
+        del ray_dirs
+        del ray_origins
+        del self.images
         optimizer = torch.optim.Adam(list(model_sparse.parameters()) + list(model_fine.parameters()),lr=self.lr)
         #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=self.gamma)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 100, 5e-6)
         criterion = torch.nn.MSELoss()
 
         test_camera = Camera(test_img.shape[1], test_img.shape[2], test_pose[0], focal)
@@ -43,9 +46,15 @@ class TrainerNerf(Trainer):
         losses = torch.zeros(self.stats_step)
 
         batch_size = self.batch_size
-
+        j = 0
         for i in range(self.max_epochs):
-            batch_samples = all_samples[i*self.batch_size:(i+1)*self.batch_size]
+            if (j+1)*self.batch_size > len(all_samples):
+                perm = torch.randperm(all_samples.shape[0])
+                all_samples = all_samples[perm]
+                j = 0
+
+            batch_samples = all_samples[(j*self.batch_size):((j+1)*self.batch_size)]
+            j += 1
             # batch_samples = batch_samples.to(self.device)
             batch_ray_dirs = batch_samples[:,:,0]
             batch_ray_origins = batch_samples[:,:,1]
@@ -60,10 +69,19 @@ class TrainerNerf(Trainer):
             fine_points, fine_dists = self.renderer.getFinePoints(batch_ray_origins, batch_ray_dirs, sparse_samples, weights)
             rgb = self.renderer.getPixelValues(model_fine, fine_points, fine_dists)
 
+            assert not torch.any(rgb > 1.1)
+            assert not torch.any(rgb < -0.1)
+            assert not torch.any(sparse_rgb > 1.1) 
+            assert not torch.any(sparse_rgb < -0.1)
+            assert not torch.any(batch_images > 1.1) 
+            assert not torch.any(batch_images < -0.1)
+
             loss = criterion(rgb, batch_images) + criterion(sparse_rgb, batch_images)
+            
             losses[i % self.stats_step] = loss.item()
             loss.backward()
             optimizer.step()
+            scheduler.step()
 
             if i % self.checkpoint_step == 0 and i > 0:
                 now = datetime.now()
@@ -83,6 +101,5 @@ class TrainerNerf(Trainer):
                 print(f'Epoch: {i}, Average loss: {loss_mean}, Secs per iter: {(time.time()-start)/self.stats_step}')
                 visualizer.visualize(i, time.time()-start, psnr_list, model_fine)
                 start = time.time()
-                #scheduler.step()
                 model_sparse.train()
                 model_fine.train()

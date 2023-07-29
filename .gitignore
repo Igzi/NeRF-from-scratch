@@ -1,3 +1,7 @@
 *.pyc
 utils/.ipynb_checkpoints/
 checkpoints/*.pt
+.ipynb_checkpoints/*
+models/.ipynb_checkpoints/*
+configs/.ipynb_checkpoints/*
+
