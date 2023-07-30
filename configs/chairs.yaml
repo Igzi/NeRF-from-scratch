@@ -14,7 +14,8 @@ model:
   L_dir: 4
 data:
   dataset_path: './nerf_real/chairs/'
-  train_size: 18
+  train_size: 107
+  validation_size: 1
 test:
   mode: 'evaluation'
   trajectory_type: 'circular'
