@@ -32,13 +32,15 @@ class DataLoaderReal(DataLoader):
             return
         
         test_size = test_end - test_start
-        images = torch.zeros((test_size,) + image.shape)
-        poses = torch.zeros((test_size,) + torch.tensor(frame['transform_matrix']).shape)
 
         for i in perm[test_start:test_end]:
             frame = transforms['frames'][i]
-            image_path = self.dataset_path + frame['file_path'] + ".png"
+            image_path = self.dataset_path + frame['file_path']
             image = iio.imread(image_path)
+
+            if i==perm[test_start]:
+                images = torch.zeros((test_size,) + image.shape)
+                poses = torch.zeros((test_size,) + torch.tensor(frame['transform_matrix']).shape)
 
             poses[i] = torch.tensor(frame['transform_matrix'])
             images[i] = torch.tensor(image)

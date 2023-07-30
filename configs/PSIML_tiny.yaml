@@ -14,9 +14,7 @@ model:
   L_dir: 4
 data:
   dataset_path: './nerf_real/PSIML2023/'
-  train_size: 100
-  validation_size: 100
-  test_size: 200
+  train_size: 18
 test:
   mode: 'evaluation'
   trajectory_type: 'circular'
