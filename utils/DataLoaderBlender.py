@@ -5,11 +5,12 @@ import imageio.v3 as iio
 from utils.DataLoader import DataLoader
 import torchvision
 
-class DataLoaderLego(DataLoader):
+
+class DataLoaderBlender(DataLoader):
     def __init__(self, config):
         super().__init__(config)
 
-    def getDataset(self, type, downsample = False,exclude_imgs=False):
+    def getDataset(self, type, downsample=False, exclude_imgs=False):
         if type == 'train':
             dataset = 'train'
             test_size = self.train_size
@@ -33,18 +34,19 @@ class DataLoaderLego(DataLoader):
             if not exclude_imgs:
                 image = iio.imread(image_path)
 
-            if i==0:
+            if i == 0:
                 if not exclude_imgs:
                     images = torch.zeros((test_size,) + image.shape)
-                poses = torch.zeros((test_size,) + torch.tensor(frame['transform_matrix']).shape)
+                poses = torch.zeros(
+                    (test_size,) + torch.tensor(frame['transform_matrix']).shape)
 
             poses[i] = torch.tensor(frame['transform_matrix'])
             if not exclude_imgs:
                 images[i] = torch.tensor(image)
 
         if not exclude_imgs:
-            if(image.shape[-1]==4):
-                images = images[:,:,:,:3]
+            if (image.shape[-1] == 4):
+                images = images[:, :, :, :3]
         if exclude_imgs:
             frame = transforms['frames'][0]
             image_path = self.dataset_path + frame['file_path'] + ".png"
@@ -57,7 +59,7 @@ class DataLoaderLego(DataLoader):
             return poses, focal, H, W
         if downsample:
             images = torch.nn.functional.interpolate(images.permute(
-                0, 3, 1, 2), (100, 100)).permute(0, 2, 3, 1)        
+                0, 3, 1, 2), (100, 100)).permute(0, 2, 3, 1)
             H = H//8
             W = W//8
             focal = focal/8.
