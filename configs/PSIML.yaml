@@ -8,12 +8,12 @@ trainer:
   batch_size: 4096
   stats_print_interval: 100
   checkpoint_epoch_interval: 1000
-  checkpoint_path: './checkpoints/nerf_lego_pt3d'
+  checkpoint_path: './checkpoints/tinynerf_psiml_pt3d'
 model:
   L_xyz: 10
   L_dir: 4
 data:
-  dataset_path: './nerf_synthetic/lego/'
+  dataset_path: './nerf_real/PSIML2023/'
   train_size: 100
   validation_size: 100
   test_size: 200
