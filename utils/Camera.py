@@ -1,7 +1,7 @@
 import torch
 
 class Camera():
-    def __init__(self, H, W, pose, focal, cx = W/2, cy = H/2, device = 'cpu'):
+    def __init__(self, H, W, pose, focal, device = 'cpu', c = None):
         self.H = H
         self.W = W
         self.device = device
@@ -10,8 +10,11 @@ class Camera():
             self.fx, self.fy = focal
         else:
             self.fx = self.fy = focal
-        self.cx = cx
-        self.cy = cy
+            
+        if c == None:
+            self.cx, self.cy = W/2, H/2
+        else:
+            self.cx, self.cy = c
 
     def getRays(self):
         i = torch.ones((self.H, 1), device = self.device) @ (torch.arange(0, self.W, device = self.device)[None,:].float())
