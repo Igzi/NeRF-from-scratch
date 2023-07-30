@@ -6,7 +6,7 @@ trainer:
   lr_decay_steps: 50000
   gamma: 0.1
   batch_size: 4096
-  stats_print_interval: 100
+  stats_print_interval: 2
   checkpoint_epoch_interval: 1000
   checkpoint_path: './checkpoints/tinynerf_psiml_pt3d'
 model:
@@ -14,7 +14,8 @@ model:
   L_dir: 4
 data:
   dataset_path: './nerf_real/PSIML2023/'
-  train_size: 18
+  train_size: 17
+  validation_size: 1
 test:
   mode: 'evaluation'
   trajectory_type: 'circular'

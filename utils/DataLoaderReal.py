@@ -19,31 +19,31 @@ class DataLoaderReal(DataLoader):
         perm = torch.randperm(self.train_size + self.validation_size + self.test_size)
 
         if type == 'train':
-            test_start = 0 
-            test_end = self.train_size
+            data_start = 0 
+            data_end = self.train_size
         elif type == 'validation':
-            test_start = self.train_size 
-            test_end = self.train_size + self.validation_size
+            data_start = self.train_size 
+            data_end = self.train_size + self.validation_size
         elif type == 'test':
-            test_start = self.train_size + self.validation_size
-            test_end = self.train_size + self.validation_size + self.test_size
+            data_start = self.train_size + self.validation_size
+            data_end = self.train_size + self.validation_size + self.data_size
         else:
             print("Dataset type ", type, " does not exist")
             return
         
-        test_size = test_end - test_start
+        data_size = data_end - data_start
 
-        for i in perm[test_start:test_end]:
-            frame = transforms['frames'][i]
+        for i in range(data_start, data_end):
+            frame = transforms['frames'][perm[i]]
             image_path = self.dataset_path + frame['file_path']
             image = iio.imread(image_path)
 
-            if i==perm[test_start]:
-                images = torch.zeros((test_size,) + image.shape)
-                poses = torch.zeros((test_size,) + torch.tensor(frame['transform_matrix']).shape)
+            if i==data_start:
+                images = torch.zeros((data_size,) + image.shape)
+                poses = torch.zeros((data_size,) + torch.tensor(frame['transform_matrix']).shape)
 
-            poses[i] = torch.tensor(frame['transform_matrix'])
-            images[i] = torch.tensor(image)
+            poses[i-data_start] = torch.tensor(frame['transform_matrix'])
+            images[i-data_start] = torch.tensor(image)
 
         if(image.shape[-1]==4):
             images = images[:,:,:,:3]
