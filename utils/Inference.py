@@ -1,17 +1,18 @@
 import torch
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Inference:
-    def __init__(self, models, checkpoint_path, device, renderer):
+    def __init__(self, models, checkpoint_path, device, renderer, dir_path):
         self.model_sparse, self.model_fine = models
         self.load_model(checkpoint_path, models)
         self.renderer = renderer
+        self.dir_path = dir_path
 
     def eval(self, camera):
         rays_origins, ray_dirs = camera.getRays()
-        print(rays_origins.shape, ray_dirs.shape)
-        rays_origins = rays_origins.reshape((-1,3))
+g        rays_origins = rays_origins.reshape((-1,3))
         ray_dirs = ray_dirs.reshape((-1,3))
         chunk_size = 40000
         test_rgb = torch.zeros_like(rays_origins).reshape((-1,3))
@@ -45,6 +46,19 @@ class Inference:
         plt.imshow(gt_img)
         plt.title('Ground Truth Image')
         plt.show()
+
+    def eval_and_save(self, camera, path):
+        path = self.dir_path + path
+        with torch.no_grad():
+            img = self.eval(camera)
+        if img.device != 'cpu':
+            img = img.cpu()
+            img = img.reshape(800,800,3)
+        img = img*255
+        img = img.long()
+        img = img.numpy()
+        img = img.astype(np.uint8)
+        plt.imsave(path, img)
 
     def save_eval_gt(self, eval_img, gt_img):
         plt.subplot(2, 1, 1)

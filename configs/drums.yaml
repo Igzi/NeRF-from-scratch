@@ -31,3 +31,6 @@ renderer:
   min_depth: 2.0
   max_depth: 6.0
   stratified: True
+inference:
+  step: 2
+  inference_folder: './nerf_inference/drums/'

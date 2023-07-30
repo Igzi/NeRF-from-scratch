@@ -6,3 +6,4 @@ models/.ipynb_checkpoints/*
 configs/.ipynb_checkpoints/*
 
 nerf_synthetic/drums/
+nerf_inference/
