@@ -1,5 +1,6 @@
 import json
 import torch
+import numpy as np
 import imageio.v3 as iio
 from utils.DataLoader import DataLoader
 
@@ -12,7 +13,7 @@ class DataLoaderReal(DataLoader):
         transform_file = open(transform_path)
         transforms = json.load(transform_file)
 
-        focal = transforms['fl_x'], transforms['fl_y']
+        fx, fy = transforms['fl_x'], transforms['fl_y']
 
         torch.manual_seed(0)
         perm = torch.randperm(self.train_size + self.validation_size + self.test_size)
@@ -41,5 +42,22 @@ class DataLoaderReal(DataLoader):
 
             poses[i] = torch.tensor(frame['transform_matrix'])
             images[i] = torch.tensor(image)
+
+        if(image.shape[-1]==4):
+            images = images[:,:,:,:3]
+
+        H, W = images[0].shape[:2]
+        focal = .5 * W / np.tan(.5 * transforms['camera_angle_x'])
+        if downsample:
+            images = torch.nn.functional.interpolate(images.permute(
+                0, 3, 1, 2), (100, 100)).permute(0, 2, 3, 1)
+                    
+            fx = fx * 100 / W
+            fy = fy * 100 / H
+            H = 100
+            W = 100
+        images /= 255
+
+        focal = fx, fy
 
         return images, poses, focal
